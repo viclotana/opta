@@ -60,6 +60,7 @@ jobs:
         run: |
           OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta apply \
           --config runx-infra/opta-ci/opta.yml \
+          --detailed-plan \
           --auto-approve \
           --refresh
 
@@ -117,6 +118,7 @@ jobs:
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
           --config runx-infra/opta-ci/opta.yml \
+          --detailed-plan \
           --auto-approve \
           --refresh
 
