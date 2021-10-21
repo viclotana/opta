@@ -1,14 +1,20 @@
-name: Release tests
-
+name: CI on Todo List Application
 on: workflow_dispatch
 
-
 jobs:
-  compare-release-w-latest:
+  todo-example-test:
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout repo
+      - name: Checkout Opta Repository
         uses: actions/checkout@v2
+
+      - name: Checkout Opta Examples Repository
+        uses: actions/checkout@v2
+        with:
+          repository: run-x/opta-examples
+          path: "opta-examples"
+          ssh-key: ${{ secrets.SSH_KEY }}
+
       - name: Pin terraform version
         uses: hashicorp/setup-terraform@v1
         with:
@@ -20,21 +26,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ALL_GITHUB_TOKEN }}
 
-      - name: Checkout runx-infra repo
-        uses: actions/checkout@v2
-        with:
-          repository: "run-x/runx-infra"
-          path: "runx-infra"
-          ssh-key: ${{ secrets.SSH_KEY }}
-
-      - name: Checkout test-service repo
-        uses: actions/checkout@v2
-        with:
-          repository: "run-x/test-service"
-          path: "test-service"
-          ssh-key: ${{ secrets.SSH_KEY }}
-
-      - name: Setup ssh
+      - name: Setup SSH
         uses: webfactory/ssh-agent@v0.4.1
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
@@ -46,56 +38,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_OPTA_CI_SECRET_KEY }}
           aws-region: us-east-1
 
-      - name: Install Latest Opta Version
-        run: /bin/bash -c "$(curl -fsSL https://docs.opta.dev/install.sh)"
-
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
-      - name: Build test-service image
-        run: docker build -t app:latest -f test-service/Dockerfile test-service/
-
-      - name: Apply Environment with Latest Opta
-        run: |
-          OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta apply \
-          --config runx-infra/opta-ci/opta.yml \
-          --detailed-plan \
-          --auto-approve \
-          --refresh
-
-      - name: Set secret with Latest Opta
-        run: |
-          OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta secret update \
-          --env ci \
-          --config test-service/opta.yml \
-          FAKE_SECRET foo
-
-      - name: Deploy test-service with Latest Opta
-        run: |
-          OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta deploy \
-          --image app:latest \
-          --env ci \
-          --config test-service/opta.yml \
-          --tag ${{ github.sha }} \
-          --auto-approve
-
-      - name: View secret and check value with Latest Opta
-        run: |
-          secret_value=$(OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta secret view \
-          --env ci \
-          --config test-service/opta.yml \
-          FAKE_SECRET | tail -1)
-          echo "This was the found secret value: ${secret_value}"
-          [[ "$secret_value" =~ .*"foo".* ]] || exit 1
-
-      - name: Set stateful data
-        env:
-          OPTA_DISABLE_REPORTING: true
-        run: |
-          export PARENT_DOMAIN=`/home/runner/.opta/opta output --env ci --config test-service/opta.yml | jq -r '."parent.domain"'`
-          export HOST=`/home/runner/.opta/opta output --env ci --config test-service/opta.yml | jq -r '.load_balancer_raw_dns'`
-          curl -X POST -L --header "Host: test-service.${PARENT_DOMAIN}" --fail ${HOST}/stateful
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
@@ -114,44 +59,62 @@ jobs:
           export PYTHONPATH=$(pwd)
           make build-binary
 
-      - name: Deploy Environment with Release Opta
+      - name: Build Dockers for API and FrontEnd service
+        run: |
+          docker build opta-examples/full-stack-example/api/todo-python-django/ --tag todo-api:v1
+          docker build opta-examples/full-stack-example/frontend/todo-vuejs --tag todo-frontend:v1
+
+      - name: Create Test Enrironment using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
-          --config runx-infra/opta-ci/opta.yml \
-          --detailed-plan \
-          --auto-approve \
+          --config opta-examples/full-stack-example/providers/aws.yml \
+          --auto-approve
           --refresh
 
-      - name: Set secret with Release Opta
-        run: |
-          OPTA_DISABLE_REPORTING=true ./dist/opta/opta secret update \
-          --env ci \
-          --config test-service/opta.yml \
-          FAKE_SECRET foo
-
-      - name: Deploy test-service with Release Opta
+      - name: Create Test API Service using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
-          --image app:latest \
-          --env ci \
-          --config test-service/opta.yml \
-          --tag ${{ github.sha }} \
+          --image todo-api:v1
+          --config opta-examples/full-stack-example/api/todo-python-django/opta/opta-api-service.yml \
           --auto-approve
-      - name: View secret and check value with Release Opta
-        run: |
-          secret_value=$(OPTA_DISABLE_REPORTING=true ./dist/opta/opta secret view \
-          --env ci \
-          --config test-service/opta.yml \
-          FAKE_SECRET | tail -1)
-          echo "This was the found secret value: ${secret_value}"
-          [[ "$secret_value" =~ .*"foo".* ]] || exit 1
+          --refresh
 
-      - name: Destroy environment (and test service) with Release Opta
+      - name: Create Test Front End Service using Release build
         run: |
-          yes | OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --env ci \
-          --config test-service/opta.yml \
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
+          --image todo-frontend:v1
+          --config opta-examples/full-stack-example/frontend/todo-vuejs/opta/opta-frontend-service.yml \
           --auto-approve
-          yes | OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config runx-infra/opta-ci/opta.yml \
+          --refresh
+
+      - name: Create Test Prometheus Service using Release build
+        run: |
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
+          --config opta-examples/full-stack-example/monitoring/opta-prometeus-grafana.yml \
+          --auto-approve
+          --refresh
+
+      - name: Destroy Test Prometheus Service using Release build
+        run: |
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
+          --config opta-examples/full-stack-example/monitoring/opta-prometeus-grafana.yml \
+          --auto-approve
+          --refresh
+
+      - name: Destroy Test Front End Service using Release build
+        run: |
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
+          --config opta-examples/full-stack-example/frontend/todo-vuejs/opta/opta-frontend-service.yml \
+          --auto-approve
+
+      - name: Destroy Test API Service using Release build
+        run: |
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
+          --config opta-examples/full-stack-example/api/todo-python-django/opta/opta-api-service.yml \
+          --auto-approve
+
+      - name: Destroy Test Enrironment using Release build
+        run: |
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
+          --config opta-examples/full-stack-example/providers/aws.yml \
           --auto-approve
