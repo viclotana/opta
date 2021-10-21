@@ -73,6 +73,9 @@ jobs:
       - name: Build test-service image
         run: docker build -t app:latest -f test-service/Dockerfile test-service/
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
+
       - name: Apply Environment with Latest Opta
         run: |
           OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta apply \
