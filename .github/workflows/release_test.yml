@@ -74,7 +74,7 @@ jobs:
       - name: Create Test API Service using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
-          --image todo-api:v1
+          --image todo-api:v1 \
           --config ./examples/ci-tests/todo-list/api-service.yml \
           --auto-approve \
           --refresh
@@ -82,7 +82,7 @@ jobs:
       - name: Create Test Front End Service using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
-          --image todo-frontend:v1
+          --image todo-frontend:v1 \
           --config ./examples/ci-tests/todo-list/frontend-service.yml \
           --auto-approve \
           --refresh
