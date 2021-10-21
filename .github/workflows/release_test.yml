@@ -80,6 +80,11 @@ jobs:
           --detailed-plan \
           --auto-approve \
           --refresh
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
 
       - name: Set secret with Latest Opta
         run: |
@@ -87,6 +92,12 @@ jobs:
           --env ci \
           --config test-service/opta.yml \
           FAKE_SECRET foo
+
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
 
       - name: Deploy test-service with Latest Opta
         run: |
@@ -97,6 +108,12 @@ jobs:
           --tag ${{ github.sha }} \
           --auto-approve
 
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
+
       - name: View secret and check value with Latest Opta
         run: |
           secret_value=$(OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta secret view \
@@ -106,6 +123,12 @@ jobs:
           echo "This was the found secret value: ${secret_value}"
           [[ "$secret_value" =~ .*"foo".* ]] || exit 1
 
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
+
       - name: Set stateful data
         env:
           OPTA_DISABLE_REPORTING: true
@@ -113,6 +136,12 @@ jobs:
           export PARENT_DOMAIN=`/home/runner/.opta/opta output --env ci --config test-service/opta.yml | jq -r '."parent.domain"'`
           export HOST=`/home/runner/.opta/opta output --env ci --config test-service/opta.yml | jq -r '.load_balancer_raw_dns'`
           curl -X POST -L --header "Host: test-service.${PARENT_DOMAIN}" --fail ${HOST}/stateful
+
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
 
       - name: Apply Environment with Release Opta
         run: |
@@ -122,12 +151,24 @@ jobs:
           --auto-approve \
           --refresh
 
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
+
       - name: Set secret with Release Opta
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta secret update \
           --env ci \
           --config test-service/opta.yml \
           FAKE_SECRET foo
+
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
 
       - name: Deploy test-service with Release Opta
         run: |
@@ -137,6 +178,13 @@ jobs:
           --config test-service/opta.yml \
           --tag ${{ github.sha }} \
           --auto-approve
+
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
+
       - name: View secret and check value with Release Opta
         run: |
           secret_value=$(OPTA_DISABLE_REPORTING=true ./dist/opta/opta secret view \
@@ -145,6 +193,12 @@ jobs:
           FAKE_SECRET | tail -1)
           echo "This was the found secret value: ${secret_value}"
           [[ "$secret_value" =~ .*"foo".* ]] || exit 1
+
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
 
       - name: Destroy environment (and test service) with Release Opta
         run: |
