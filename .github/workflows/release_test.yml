@@ -1,12 +1,27 @@
-name: GCP Additional Node Pool
+name: Release tests
+
 on: workflow_dispatch
 
 jobs:
-  additional-gcp-nodepool:
+  compare-release-w-latest:
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout Opta Repository
+      - name: Checkout repo
         uses: actions/checkout@v2
+
+      - name: Checkout runx-infra repo
+        uses: actions/checkout@v2
+        with:
+          repository: "run-x/runx-infra"
+          path: "runx-infra"
+          ssh-key: ${{ secrets.SSH_KEY }}
+
+      - name: Checkout test-service repo
+        uses: actions/checkout@v2
+        with:
+          repository: "run-x/test-service"
+          path: "test-service"
+          ssh-key: ${{ secrets.SSH_KEY }}
 
       - name: Pin terraform version
         uses: hashicorp/setup-terraform@v1
@@ -19,17 +34,17 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ALL_GITHUB_TOKEN }}
 
-      - name: Setup SSH
+      - name: Setup ssh
         uses: webfactory/ssh-agent@v0.4.1
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Configure GCP credentials
-        uses: google-github-actions/setup-gcloud@master
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          service_account_key: ${{ secrets.CI_GKE_SA_KEY }}
-          project_id: opta-ci-1
-          export_default_credentials: true
+          aws-access-key-id: ${{ secrets.AWS_OPTA_CI_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_OPTA_CI_SECRET_KEY }}
+          aws-region: us-east-1
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
@@ -48,29 +63,95 @@ jobs:
           export PYTHONPATH=$(pwd)
           make build-binary
 
-      - name: Create Test Enrironment with no Additional Nodepool
+      - name: Install Latest Opta Version
+        run: /bin/bash -c "$(curl -fsSL https://docs.opta.dev/install.sh)"
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build test-service image
+        run: docker build -t app:latest -f test-service/Dockerfile test-service/
+
+      - name: Apply Environment with Latest Opta
         run: |
-          OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
-          --config ./examples/ci-tests/gcp-nodepool/gcp-nodepool-state1.yml \
+          OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta apply \
+          --config runx-infra/opta-ci/opta.yml \
+          --detailed-plan \
           --auto-approve \
           --refresh
 
-      - name: Update Test Environment to have Additional Nodepool
+      - name: Set secret with Latest Opta
+        run: |
+          OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta secret update \
+          --env ci \
+          --config test-service/opta.yml \
+          FAKE_SECRET foo
+
+      - name: Deploy test-service with Latest Opta
+        run: |
+          OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta deploy \
+          --image app:latest \
+          --env ci \
+          --config test-service/opta.yml \
+          --tag ${{ github.sha }} \
+          --auto-approve
+
+      - name: View secret and check value with Latest Opta
+        run: |
+          secret_value=$(OPTA_DISABLE_REPORTING=true /home/runner/.opta/opta secret view \
+          --env ci \
+          --config test-service/opta.yml \
+          FAKE_SECRET | tail -1)
+          echo "This was the found secret value: ${secret_value}"
+          [[ "$secret_value" =~ .*"foo".* ]] || exit 1
+
+      - name: Set stateful data
+        env:
+          OPTA_DISABLE_REPORTING: true
+        run: |
+          export PARENT_DOMAIN=`/home/runner/.opta/opta output --env ci --config test-service/opta.yml | jq -r '."parent.domain"'`
+          export HOST=`/home/runner/.opta/opta output --env ci --config test-service/opta.yml | jq -r '.load_balancer_raw_dns'`
+          curl -X POST -L --header "Host: test-service.${PARENT_DOMAIN}" --fail ${HOST}/stateful
+
+      - name: Apply Environment with Release Opta
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
-          --config ./examples/ci-tests/gcp-nodepool/gcp-nodepool-state2.yml \
+          --config runx-infra/opta-ci/opta.yml \
+          --detailed-plan \
           --auto-approve \
           --refresh
 
-      - name: Update Test Environment to remove Additional Nodepool
+      - name: Set secret with Release Opta
         run: |
-          OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
-          --config ./examples/ci-tests/gcp-nodepool/gcp-nodepool-state1.yml \
-          --auto-approve \
-          --refresh
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta secret update \
+          --env ci \
+          --config test-service/opta.yml \
+          FAKE_SECRET foo
 
-      - name: Destroy Test Enrironment
+      - name: Deploy test-service with Release Opta
+        run: |
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
+          --image app:latest \
+          --env ci \
+          --config test-service/opta.yml \
+          --tag ${{ github.sha }} \
+          --auto-approve
+      - name: View secret and check value with Release Opta
+        run: |
+          secret_value=$(OPTA_DISABLE_REPORTING=true ./dist/opta/opta secret view \
+          --env ci \
+          --config test-service/opta.yml \
+          FAKE_SECRET | tail -1)
+          echo "This was the found secret value: ${secret_value}"
+          [[ "$secret_value" =~ .*"foo".* ]] || exit 1
+
+      - name: Destroy environment (and test service) with Release Opta
         run: |
           yes | OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config ./examples/ci-tests/gcp-nodepool/gcp-nodepool-state1.yml \
+          --env ci \
+          --config test-service/opta.yml \
+          --auto-approve
+          yes | OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
+          --config runx-infra/opta-ci/opta.yml \
           --auto-approve
