@@ -67,7 +67,7 @@ jobs:
       - name: Create Test Enrironment using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
-          --config opta-examples/full-stack-example/providers/aws.yml \
+          --config ./examples/ci-tests/todo-list/provider.yml \
           --auto-approve
           --refresh
 
@@ -75,7 +75,7 @@ jobs:
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
           --image todo-api:v1
-          --config opta-examples/full-stack-example/api/todo-python-django/opta/opta-api-service.yml \
+          --config ./examples/ci-tests/todo-list/api-service.yml \
           --auto-approve
           --refresh
 
@@ -83,38 +83,38 @@ jobs:
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
           --image todo-frontend:v1
-          --config opta-examples/full-stack-example/frontend/todo-vuejs/opta/opta-frontend-service.yml \
+          --config ./examples/ci-tests/todo-list/frontend-service.yml \
           --auto-approve
           --refresh
 
       - name: Create Test Prometheus Service using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
-          --config opta-examples/full-stack-example/monitoring/opta-prometeus-grafana.yml \
+          --config ./examples/ci-tests/todo-list/monitoring-service.yml \
           --auto-approve
           --refresh
 
       - name: Destroy Test Prometheus Service using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config opta-examples/full-stack-example/monitoring/opta-prometeus-grafana.yml \
+          --config ./examples/ci-tests/todo-list/monitoring-service.yml \
           --auto-approve
           --refresh
 
       - name: Destroy Test Front End Service using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config opta-examples/full-stack-example/frontend/todo-vuejs/opta/opta-frontend-service.yml \
+          --config ./examples/ci-tests/todo-list/frontend-service.yml \
           --auto-approve
 
       - name: Destroy Test API Service using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config opta-examples/full-stack-example/api/todo-python-django/opta/opta-api-service.yml \
+          --config ./examples/ci-tests/todo-list/api-service.yml \
           --auto-approve
 
       - name: Destroy Test Enrironment using Release build
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config opta-examples/full-stack-example/providers/aws.yml \
+          --config ./examples/ci-tests/todo-list/provider.yml \
           --auto-approve
