@@ -1,19 +1,12 @@
-name: CI on Todo List Application
+name: AWS Additional Node Group
 on: workflow_dispatch
 
 jobs:
-  todo-example-test:
+  additional-aws-nodegroup:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout Opta Repository
         uses: actions/checkout@v2
-
-      - name: Checkout Opta Examples Repository
-        uses: actions/checkout@v2
-        with:
-          repository: run-x/opta-examples
-          path: "opta-examples"
-          ssh-key: ${{ secrets.SSH_KEY }}
 
       - name: Pin terraform version
         uses: hashicorp/setup-terraform@v1
@@ -59,58 +52,29 @@ jobs:
           export PYTHONPATH=$(pwd)
           make build-binary
 
-      - name: Build Dockers for API and FrontEnd service
-        run: |
-          docker build opta-examples/full-stack-example/api/todo-python-django/ --tag todo-api:v1
-          docker build opta-examples/full-stack-example/frontend/todo-vuejs --tag todo-frontend:v1
-
-      - name: Create Test Enrironment using Release build
+      - name: Create Test Enrironment with no Additional Nodegroup
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
-          --config ./examples/ci-tests/todo-list/provider.yml \
+          --config ./examples/ci-tests/aws-nodegroup/aws-nodegroup-state1.yml \
           --auto-approve \
           --refresh
 
-      - name: Create Test API Service using Release build
-        run: |
-          OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
-          --image todo-api:v1 \
-          --config ./examples/ci-tests/todo-list/api-service.yml \
-          --auto-approve
-
-      - name: Create Test Front End Service using Release build
-        run: |
-          OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
-          --image todo-frontend:v1 \
-          --config ./examples/ci-tests/todo-list/frontend-service.yml \
-          --auto-approve
-
-      - name: Create Test Prometheus Service using Release build
+      - name: Update Test Environment to have Additional Nodegroup
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
-          --config ./examples/ci-tests/todo-list/monitoring-service.yml \
-          --auto-approve
+          --config ./examples/ci-tests/aws-nodegroup/aws-nodegroup-state2.yml \
+          --auto-approve \
+          --refresh
 
-      - name: Destroy Test Prometheus Service using Release build
+      - name: Update Test Environment to remove Additional Nodegroup
+        run: |
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
+          --config ./examples/ci-tests/aws-nodegroup/aws-nodegroup-state1.yml \
+          --auto-approve \
+          --refresh
+
+      - name: Destroy Test Enrironment
         run: |
           yes | OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config ./examples/ci-tests/todo-list/monitoring-service.yml \
-          --auto-approve
-
-      - name: Destroy Test Front End Service using Release build
-        run: |
-          yes | OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config ./examples/ci-tests/todo-list/frontend-service.yml \
-          --auto-approve
-
-      - name: Destroy Test API Service using Release build
-        run: |
-          yes | OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config ./examples/ci-tests/todo-list/api-service.yml \
-          --auto-approve
-
-      - name: Destroy Test Enrironment using Release build
-        run: |
-          yes | OPTA_DISABLE_REPORTING=true ./dist/opta/opta destroy \
-          --config ./examples/ci-tests/todo-list/provider.yml \
+          --config ./examples/ci-tests/aws-nodegroup/aws-nodegroup-state1.yml \
           --auto-approve
