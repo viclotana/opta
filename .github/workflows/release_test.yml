@@ -157,6 +157,20 @@ jobs:
           kubectl get ing -A
           kubectl get pods -A
 
+      - name: Apply Environment with Release Opta
+        run: |
+          OPTA_DISABLE_REPORTING=true ./dist/opta/opta apply \
+          --config runx-infra/opta-ci/opta.yml \
+          --detailed-plan \
+          --auto-approve \
+          --refresh
+
+      - name: Kubectl Commands
+        run: |
+          kubectl get ns
+          kubectl get ing -A
+          kubectl get pods -A
+
       - name: Set secret with Release Opta
         run: |
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta secret update \
