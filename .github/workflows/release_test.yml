@@ -90,7 +90,7 @@ jobs:
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
           --image app:latest \
           --env ci \
-          --config ./examples/ci-tests/db-editions/service-no-dbs.yml \
+          --config ./examples/ci-tests/db-editions/service-no-db.yml \
           --tag ${{ github.sha }} \
           --auto-approve
 
@@ -99,7 +99,7 @@ jobs:
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
           --image app:latest \
           --env ci \
-          --config ./examples/ci-tests/db-editions/service-redis-dbs.yml \
+          --config ./examples/ci-tests/db-editions/service-redis-db.yml \
           --tag ${{ github.sha }} \
           --auto-approve
 
@@ -108,7 +108,7 @@ jobs:
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
           --image app:latest \
           --env ci \
-          --config ./examples/ci-tests/db-editions/service-pg-dbs.yml \
+          --config ./examples/ci-tests/db-editions/service-pg-db.yml \
           --tag ${{ github.sha }} \
           --auto-approve
 
@@ -117,7 +117,7 @@ jobs:
           OPTA_DISABLE_REPORTING=true ./dist/opta/opta deploy \
           --image app:latest \
           --env ci \
-          --config ./examples/ci-tests/db-editions/service-docdb-dbs.yml \
+          --config ./examples/ci-tests/db-editions/service-docdb-db.yml \
           --tag ${{ github.sha }} \
           --auto-approve
 
