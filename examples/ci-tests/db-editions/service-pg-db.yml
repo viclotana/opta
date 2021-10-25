@@ -17,7 +17,7 @@ modules:
     secrets:
       - FAKE_SECRET
     links:
-      - docdb
+      - pg
       - bucket: ["write"]
   - name: pg
     type: postgres

@@ -18,7 +18,11 @@ modules:
       - FAKE_SECRET
     links:
       - docdb
+      - pg
       - bucket: ["write"]
+  - name: pg
+    type: postgres
+    safety: false
   - name: docdb
     type: aws-documentdb
   - name: bucket

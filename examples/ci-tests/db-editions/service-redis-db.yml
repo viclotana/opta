@@ -18,7 +18,11 @@ modules:
       - FAKE_SECRET
     links:
       - redis
+      - pg
       - bucket: ["write"]
+  - name: pg
+    type: postgres
+    safety: false
   - name: redis
     type: redis
     node_type: "cache.t3.micro"

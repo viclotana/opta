@@ -17,7 +17,11 @@ modules:
     secrets:
       - FAKE_SECRET
     links:
+      - pg
       - bucket: ["write"]
+  - name: pg
+    type: postgres
+    safety: false
   - name: bucket
     type: aws-s3
     bucket_name: "runx-test-service-bucket-{env}"
