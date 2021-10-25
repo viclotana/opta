@@ -10,7 +10,7 @@ modules:
     port:
       http: 5000
     image: AUTO
-    healthcheck_path: "/healthcheck"
+    healthcheck_path: "/healthcheck_pg"
     env_vars:
       - name: APPENV
         value: "{env}"
