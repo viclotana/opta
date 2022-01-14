@@ -40,6 +40,9 @@ parameters:
   run-destroy-aws-dns-true:
     type: boolean
     default: false
+  run-additional-commands:
+    type: boolean
+    default: false
 
 orbs:
   terraform: circleci/terraform@3.0.0
@@ -268,6 +271,42 @@ jobs:
       - aws-cli/setup
       - run:
           name: "Deploy opta environment"
+          command: |
+            ./dist/opta/opta apply \
+            --config ./examples/ci-tests/create-and-destroy-aws/environment.yml \
+            --auto-approve \
+            --refresh
+
+  aws-create-env-background-kill:
+    executor: ubuntu-machine
+    environment:
+      OPTA_DISABLE_REPORTING: "true"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - install-opta-dependencies
+      - aws-cli/install
+      - aws-cli/setup
+      - run:
+          name: "Deploy opta environment"
+          command: |
+            ./dist/opta/opta apply \
+            --config ./examples/ci-tests/create-and-destroy-aws/environment.yml \
+            --auto-approve \
+            --refresh
+          background: true
+      - run:
+          name: Sleep 5 mins
+          command: sleep 300
+      - run:
+          name: Kill Opta Command
+          command: pill -SIGQUIT opta
+      - run:
+          name: Sleep 1 min
+          command: sleep 60
+      - run:
+          name: Deploy Opta Environment
           command: |
             ./dist/opta/opta apply \
             --config ./examples/ci-tests/create-and-destroy-aws/environment.yml \
@@ -783,6 +822,23 @@ jobs:
             --env awsenv-ci \
             --auto-approve || if [[ $? -eq 141 ]]; then true; else exit $?; fi
 
+  aws-opta-configure-kubectl:
+    executor: ubuntu-machine
+    environment:
+      OPTA_DISABLE_REPORTING: "true"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - install-opta-dependencies
+      - aws-cli/install
+      - aws-cli/setup
+      - run:
+          name: "Congfigure Kubectl for AWS"
+          command: |
+            ./dist/opta/opta configure-kubectl \
+            --config ./examples/ci-tests/create-and-destroy-aws/environment.yml || if [[ $? -eq 141 ]]; then true; else exit $?; fi
+
   aws-destroy-env:
     executor: ubuntu-machine
     environment:
@@ -1272,6 +1328,26 @@ jobs:
             --env gcpenv-ci \
             --auto-approve || if [[ $? -eq 141 ]]; then true; else exit $?; fi
 
+  gcp-opta-configure-kubectl:
+    executor: ubuntu-machine
+    environment:
+      OPTA_DISABLE_REPORTING: "true"
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ./
+      - install-opta-dependencies
+      - gcp-cli/install
+      - gcp-cli/initialize
+      - run:
+          name: "Setting up GCP Credentials"
+          command: echo 'export GOOGLE_APPLICATION_CREDENTIALS="/home/circleci/gcloud-service-key.json"' >> $BASH_ENV
+      - run:
+          name: "Congfigure Kubectl for GCP"
+          command: |
+            ./dist/opta/opta configure-kubectl \
+            --config ./examples/ci-tests/create-and-destroy-gcp/environment.yml || if [[ $? -eq 141 ]]; then true; else exit $?; fi
+
   local-opta-example-create-svcs:
     executor: ubuntu-machine
     environment:
@@ -1372,6 +1448,9 @@ workflows:
       - aws-create-env:
           requires:
             - build-opta-binary
+      - aws-opta-configure-kubectl:
+          requires:
+            - aws-create-env
       - aws-test-cloudfront:
           requires:
             - aws-create-env
@@ -1413,6 +1492,9 @@ workflows:
       - gcp-create-env:
           requires:
             - build-opta-binary
+      - gcp-opta-configure-kubectl:
+          requires:
+            - gcp-create-env
       - gcp-test-additional-nodegroup:
           requires:
             - gcp-create-env
@@ -1623,6 +1705,20 @@ workflows:
       - aws-destroy-env-dns-true:
           requires:
             - build-opta-binary
+
+  run-additional-commands:
+    when: << pipeline.parameters.run-additional-commands >>
+    jobs:
+      - build-opta-binary
+      - aws-create-env-background-kill:
+          requires:
+            - build-opta-binary
+      - aws-opta-configure-kubectl:
+          requires:
+            - aws-create-env-background-kill
+      - aws-destroy-env:
+          requires:
+            - aws-opta-configure-kubectl
 
   nightly:
     triggers:
