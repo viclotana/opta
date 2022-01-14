@@ -306,6 +306,11 @@ jobs:
           name: Sleep 1 min
           command: sleep 60
       - run:
+          name: Force Unlock Opta Environment
+          command: |
+            yes | ./dist/opta/opta force-unlock \
+            --config ./examples/ci-tests/create-and-destroy-aws/environment.yml
+      - run:
           name: Deploy Opta Environment
           command: |
             ./dist/opta/opta apply \
