@@ -297,11 +297,11 @@ jobs:
             --refresh
           background: true
       - run:
-          name: Sleep 5 mins
-          command: sleep 300
+          name: Sleep 1 mins
+          command: sleep 60
       - run:
           name: Kill Opta Command
-          command: pill -SIGQUIT opta
+          command: pkill -SIGQUIT opta
       - run:
           name: Sleep 1 min
           command: sleep 60
