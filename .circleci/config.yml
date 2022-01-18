@@ -299,8 +299,8 @@ jobs:
             --refresh
           background: true
       - run:
-          name: Sleep 10 mins
-          command: sleep 600
+          name: Sleep 9 mins
+          command: sleep 540
       - run:
           name: Kill Opta Command
           command: pkill -SIGQUIT opta
