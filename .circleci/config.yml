@@ -311,6 +311,12 @@ jobs:
             yes | ./dist/opta/opta force-unlock \
             --config ./examples/ci-tests/create-and-destroy-aws/environment.yml || if [[ $? -eq 141 ]]; then true; else exit $?; fi
       - run:
+          name: "Destroy environment"
+          command: |
+            yes | ./dist/opta/opta destroy \
+            --config ./examples/ci-tests/create-and-destroy-aws/environment.yml \
+            --auto-approve || if [[ $? -eq 141 ]]; then true; else exit $?; fi
+      - run:
           name: Deploy Opta Environment
           command: |
             ./dist/opta/opta apply \
