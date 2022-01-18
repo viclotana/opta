@@ -285,13 +285,15 @@ jobs:
       - checkout
       - attach_workspace:
           at: ./
+      - attach_workspace:
+          at: ~/
       - install-opta-dependencies
       - aws-cli/install
       - aws-cli/setup
       - run:
           name: "Deploy opta environment"
           command: |
-            ./dist/opta/opta apply \
+            $HOME/.opta/opta apply \
             --config ./examples/ci-tests/create-and-destroy-aws/environment.yml \
             --auto-approve \
             --refresh
@@ -308,18 +310,18 @@ jobs:
       - run:
           name: Force Unlock Opta Environment
           command: |
-            yes | ./dist/opta/opta force-unlock \
+            yes | $HOME/.opta/opta force-unlock \
             --config ./examples/ci-tests/create-and-destroy-aws/environment.yml || if [[ $? -eq 141 ]]; then true; else exit $?; fi
       - run:
           name: "Destroy environment"
           command: |
-            yes | ./dist/opta/opta destroy \
+            yes | $HOME/.opta/opta destroy \
             --config ./examples/ci-tests/create-and-destroy-aws/environment.yml \
             --auto-approve || if [[ $? -eq 141 ]]; then true; else exit $?; fi
       - run:
           name: Deploy Opta Environment
           command: |
-            ./dist/opta/opta apply \
+            $HOME/.opta/opta apply \
             --config ./examples/ci-tests/create-and-destroy-aws/environment.yml \
             --auto-approve \
             --refresh
@@ -841,13 +843,15 @@ jobs:
       - checkout
       - attach_workspace:
           at: ./
+      - attach_workspace:
+          at: ~/
       - install-opta-dependencies
       - aws-cli/install
       - aws-cli/setup
       - run:
           name: "Congfigure Kubectl for AWS"
           command: |
-            ./dist/opta/opta configure-kubectl \
+            $HOME/.opta/opta configure-kubectl \
             --config ./examples/ci-tests/create-and-destroy-aws/environment.yml || if [[ $? -eq 141 ]]; then true; else exit $?; fi
 
   aws-destroy-env:
@@ -1720,16 +1724,16 @@ workflows:
   run-additional-commands:
     when: << pipeline.parameters.run-additional-commands >>
     jobs:
-      - build-opta-binary
+      - download-opta
       - aws-create-env-background-kill:
           requires:
             - build-opta-binary
       - aws-opta-configure-kubectl:
           requires:
             - aws-create-env-background-kill
-      - aws-destroy-env:
-          requires:
-            - aws-opta-configure-kubectl
+      # - aws-destroy-env:
+      #     requires:
+      #       - aws-opta-configure-kubectl
 
   nightly:
     triggers:
