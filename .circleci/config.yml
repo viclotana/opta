@@ -309,7 +309,7 @@ jobs:
           name: Force Unlock Opta Environment
           command: |
             yes | ./dist/opta/opta force-unlock \
-            --config ./examples/ci-tests/create-and-destroy-aws/environment.yml
+            --config ./examples/ci-tests/create-and-destroy-aws/environment.yml || if [[ $? -eq 141 ]]; then true; else exit $?; fi
       - run:
           name: Deploy Opta Environment
           command: |
