@@ -1727,7 +1727,7 @@ workflows:
       - download-opta
       - aws-create-env-background-kill:
           requires:
-            - build-opta-binary
+            - download-opta
       - aws-opta-configure-kubectl:
           requires:
             - aws-create-env-background-kill
