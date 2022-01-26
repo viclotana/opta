@@ -38,7 +38,7 @@ resource "google_container_cluster" "primary" {
     }
   }
   release_channel {
-    channel = var.gke_channel
+    channel = "RAPID"
   }
   ip_allocation_policy {
     cluster_secondary_range_name  = "gke-pods"
