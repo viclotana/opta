@@ -27,7 +27,7 @@ resource "aws_security_group" "eks" {
 resource "aws_eks_cluster" "cluster" {
   name     = "opta-${var.layer_name}"
   role_arn = aws_iam_role.cluster_role.arn
-  version  = var.k8s_version
+  version  = "1.21"
 
   vpc_config {
     subnet_ids              = var.private_subnet_ids
