@@ -22,7 +22,7 @@ one_time_run = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".first_
 
 REGISTRY = make_registry_dict()
 VERSION = open(version_path).read().strip()
-DEV_VERSION = "dev"
+DEV_VERSION = ["dev", ""]
 
 SESSION_ID = int(time.time() * 1000)
 

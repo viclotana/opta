@@ -114,7 +114,7 @@ def initialize_logger() -> Tuple[Logger, QueueListener, DatadogLogHandler]:
 
 logger, dd_listener, dd_handler = initialize_logger()
 # Don't send logs to datadog during tests
-if hasattr(sys, "_called_from_test") or VERSION == DEV_VERSION:
+if hasattr(sys, "_called_from_test") or VERSION in DEV_VERSION:
     dd_handler.setLevel(logging.CRITICAL)
 
 fmt = PartialFormatter("")

@@ -315,10 +315,7 @@ def _verify_semver(
     layer: "Layer",
     auto_approve: bool = False,
 ) -> None:
-    if old_semver_string in [DEV_VERSION, ""] or current_semver_string in [
-        DEV_VERSION,
-        "",
-    ]:
+    if old_semver_string in DEV_VERSION or current_semver_string in DEV_VERSION:
         return
 
     old_semver = semver.VersionInfo.parse(old_semver_string)

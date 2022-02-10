@@ -47,7 +47,7 @@ class DatadogLogHandler(Handler):
             self.flush()
 
     def flush(self) -> None:
-        env = "dev" if VERSION in ["", DEV_VERSION] else "production"
+        env = "dev" if VERSION in DEV_VERSION else "production"
         if self.cache:
             parameters = {
                 "ddsource": "cli",
@@ -67,7 +67,7 @@ class DatadogLogHandler(Handler):
 
             if (
                 os.environ.get(OPTA_DISABLE_REPORTING) is not None
-                or VERSION == DEV_VERSION
+                or VERSION in DEV_VERSION
             ):
                 self.cache = []
                 return

@@ -68,7 +68,7 @@ class AmplitudeClient:
         event_properties: Optional[dict] = None,
         user_properties: Optional[dict] = None,
     ) -> None:
-        if hasattr(sys, "_called_from_test") or VERSION == DEV_VERSION:
+        if hasattr(sys, "_called_from_test") or VERSION in DEV_VERSION:
             logger.debug(
                 "Not sending amplitude cause we think we're in a pytest or in dev"
             )

@@ -36,7 +36,7 @@ def before_send(event: Any, hint: Any) -> Any:
     return event
 
 
-if hasattr(sys, "_called_from_test") or VERSION == DEV_VERSION:
+if hasattr(sys, "_called_from_test") or VERSION in DEV_VERSION:
     logger.debug("Not sending sentry cause we're in test or dev")
 elif os.environ.get(OPTA_DISABLE_REPORTING) is not None:
     logger.debug("Not sending sentry cause disable reporting flag is set")
