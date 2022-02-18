@@ -13,7 +13,7 @@ from opta.layer2 import Layer
 from opta.module_spec import SPEC_NAME, ModuleSpec
 from opta.preprocessor import preprocess_layer
 from opta.utils import schema, yaml
-
+from opta.core.validator2 import validate_yaml
 
 class LayerLoader:
     def from_path(self, path: str) -> Layer:
@@ -27,6 +27,7 @@ class LayerLoader:
 
     def from_dict(self, raw: dict) -> Layer:
         # TODO: Validate config data schema (different validation by version?)
+        
         preprocess_layer(raw)
 
         layer = Layer.from_dict(raw)

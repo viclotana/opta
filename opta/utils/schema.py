@@ -31,11 +31,17 @@ def validate(data: Any, schema: Any) -> None:
 
 @functools.lru_cache
 def module_schema() -> Any:
-    schema_path = _ROOT_PATH.joinpath("schemas", "module.yaml")
+    schema_path = _ROOT_PATH.joinpath(
+        "config",
+        "schemas", "module.yaml")
 
     with open(schema_path, "r") as f:
         return yaml.load(f)
 
+def optaconfig_schema() -> Any:
+    schema_path =  _ROOT_PATH.joinpath("schemas", "optaconfig.yaml")
+    with open(schema_path, "r") as f:
+        return yaml.load(f)
 
 # Monkeypatch RefResolver so it never makes remote calls
 def _resolve_remote(self: jsonschema.RefResolver, uri: str) -> Any:
