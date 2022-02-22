@@ -27,7 +27,7 @@ class LayerLoader:
 
     def from_dict(self, raw: dict) -> Layer:
         # TODO: Validate config data schema (different validation by version?)
-        
+        validate_yaml(raw)
         preprocess_layer(raw)
 
         layer = Layer.from_dict(raw)
