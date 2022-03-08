@@ -200,3 +200,8 @@ variable "tolerations" {
 variable "cron_jobs" {
   default = []
 }
+
+variable "timeout" {
+  type    = number
+  default = 300
+}

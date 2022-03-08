@@ -195,6 +195,11 @@ inputs:
     validator: list(include('cron_job'), required=False)
     description: A list of cronjobs to execute as part of this service
     default: []
+  - name: timeout
+    user_facing: true
+    validator: int(required=False)
+    description: Time in seconds to wait for deployment.
+    default: 600
 extra_validators:
   cron_job:
     commands: list(required=True)

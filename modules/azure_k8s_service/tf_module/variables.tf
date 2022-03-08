@@ -189,3 +189,8 @@ variable "ingress_extra_annotations" {
   type    = map(string)
   default = {}
 }
+
+variable "timeout" {
+  type    = number
+  default = 300
+}
