@@ -1,7 +1,9 @@
 resource "random_id" "bucket_suffix" {
   byte_length = 8
 }
-
+#Opta uses Cloud provider managed keys, thats very secure as well
+#The operational overhead of customer keys is high
+#tfsec:ignore:aws-s3-encryption-customer-key
 resource "aws_s3_bucket" "log_bucket" {
   bucket = "opta-${var.env_name}-logging-bucket-${random_id.bucket_suffix.hex}"
   server_side_encryption_configuration {
@@ -40,6 +42,7 @@ resource "aws_s3_bucket" "log_bucket" {
   lifecycle {
     ignore_changes = [bucket]
   }
+  block_public_acls = true
 }
 
 # Visit (https://run-x.atlassian.net/browse/RUNX-1125) for further reference
@@ -122,4 +125,13 @@ resource "aws_s3_bucket_policy" "log_bucket_policy" {
   bucket = aws_s3_bucket.log_bucket.id
   policy = data.aws_iam_policy_document.log_bucket_policy.json
   # Visit (https://run-x.atlassian.net/browse/RUNX-1125) for further reference
+}
+
+resource "aws_s3_bucket_public_access_block" "block" {
+  bucket = aws_s3_bucket.log_bucket
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+  depends_on              = [aws_s3_bucket_policy.log_bucket_policy]
 }
