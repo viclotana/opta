@@ -1204,6 +1204,7 @@ jobs:
           condition: << pipeline.parameters.ci-use-diff-env >>
           steps:
             - remake-environment-configs
+      - install-python
       - attach_workspace:
           at: ./
       - install-opta-dependencies
@@ -1256,6 +1257,7 @@ jobs:
           condition: << pipeline.parameters.ci-use-diff-env >>
           steps:
             - remake-environment-configs
+      - install-python
       - attach_workspace:
           at: ./
       - install-opta-dependencies
@@ -1293,6 +1295,7 @@ jobs:
           condition: << pipeline.parameters.ci-use-diff-env >>
           steps:
             - remake-environment-configs
+      - install-python
       - attach_workspace:
           at: ./
       - install-opta-dependencies
@@ -1315,6 +1318,7 @@ jobs:
           condition: << pipeline.parameters.ci-use-diff-env >>
           steps:
             - remake-environment-configs
+      - install-python
       - attach_workspace:
           at: ./
       - install-opta-dependencies
@@ -1337,6 +1341,7 @@ jobs:
           condition: << pipeline.parameters.ci-use-diff-env >>
           steps:
             - remake-environment-configs
+      - install-python
       - attach_workspace:
           at: ./
       - install-opta-dependencies
@@ -1359,6 +1364,7 @@ jobs:
           condition: << pipeline.parameters.ci-use-diff-env >>
           steps:
             - remake-environment-configs
+      - install-python
       - attach_workspace:
           at: ~/
       - install-opta-dependencies
@@ -1587,6 +1593,7 @@ jobs:
           condition: << pipeline.parameters.ci-use-diff-env >>
           steps:
             - remake-environment-configs
+      - install-python
       - attach_workspace:
           at: ~/
       - install-opta-dependencies
@@ -2108,6 +2115,7 @@ jobs:
           condition: << pipeline.parameters.ci-use-diff-env >>
           steps:
             - remake-environment-configs
+      - install-python
       - attach_workspace:
           at: ./
       - install-opta-dependencies
@@ -2156,6 +2164,7 @@ jobs:
           condition: << pipeline.parameters.ci-use-diff-env >>
           steps:
             - remake-environment-configs
+      - install-python
       - attach_workspace:
           at: ./
       - install-opta-dependencies
