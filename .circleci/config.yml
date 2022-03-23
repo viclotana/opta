@@ -411,7 +411,7 @@ jobs:
       - run:
           name: "Other Dependency commands"
           command: |
-            docker version
+            docker
             helm version
             terraform version
       - install-python-dependencies
