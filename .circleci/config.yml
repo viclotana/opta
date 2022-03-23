@@ -384,6 +384,38 @@ jobs:
             - todo-api
             - todo-frontend
 
+  test-python-docker:
+    executor: python-docker
+    steps:
+      - checkout-opta
+      - when:
+          condition: << pipeline.parameters.ci-use-diff-env >>
+          steps:
+            - remake-environment-configs
+      - aws-cli/install
+      - aws-cli/setup
+      - run:
+          name: "AWS Command"
+          command: aws --version
+      - azure-cli/install
+      - azure-cli/login-with-service-principal
+      - run:
+          name: "Azure Command"
+          command: az version
+      - gcp-cli/install
+      - gcp-cli/initialize
+      - run:
+          name: "Gcloud Command"
+          command: gcloud version
+      - install-opta-dependencies
+      - run:
+          name: "Other Dependency commands"
+          command: |
+            docker version
+            helm version
+            terraform version
+      - install-python-dependencies
+
   aws-generate-terraform-language-files:
     executor: python-docker
     steps:
@@ -2576,6 +2608,10 @@ workflows:
           requires:
             - gcp-tg-test-service-http
             - gcp-tg-test-other-modules-plan
+  test:
+    when: << pipeline.parameters.test >>
+    jobs:
+      - test-python-docker
 
   nightly:
     triggers:
