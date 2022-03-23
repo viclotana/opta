@@ -77,7 +77,7 @@ executors:
       image: ubuntu-2004:202111-01
   python-docker:
     docker:
-      - image: cimg/python:3.8
+      - image: cimg/python:3.8.12
 
 commands:
   install-python:
