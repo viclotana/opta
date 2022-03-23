@@ -408,12 +408,15 @@ jobs:
           name: "Gcloud Command"
           command: gcloud version
       - install-opta-dependencies
+      - setup_remote_docker:
+          version: 20.10.12
       - run:
           name: "Other Dependency commands"
           command: |
-            docker
+            docker version
             helm version
             terraform version
+            docker build --tag todo-api:v1 -f ./examples/full-stack-example/api/todo-python-django/Dockerfile opta-examples/full-stack-example/api/todo-python-django/
       - install-python-dependencies
 
   aws-generate-terraform-language-files:
