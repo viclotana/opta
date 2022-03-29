@@ -53,7 +53,8 @@ EOF
 resource "aws_iam_role_policy" "vpc_flow_log" {
   name = "opta-${var.env_name}-vpc-flow"
   role = aws_iam_role.vpc_flow_log.id
-
+#Ignore 
+#tfsec:ignore:aws-iam-no-policy-wildcards
   policy = <<EOF
 {
   "Version": "2012-10-17",
