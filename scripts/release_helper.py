@@ -4,6 +4,7 @@ import os
 import re
 import tempfile
 from curses import window
+from io import StringIO
 from subprocess import call
 from typing import List, Optional, Tuple
 
@@ -16,10 +17,10 @@ from github.GitRef import GitRef
 from github.GitRelease import GitRelease
 from github.PullRequest import PullRequest
 from github.Repository import Repository
-from ruamel.yaml import YAML, YAMLError
-from ruamel.yaml.compat import StringIO
 
-yaml = YAML(typ="safe")
+from opta.utils import yaml
+from opta.utils.yaml import YAMLError
+
 KEYS_ENTER = (curses.KEY_ENTER, ord("\n"), ord("\r"))
 KEYS_UP = (curses.KEY_UP, ord("k"))
 KEYS_PANE_TOGGLE = (curses.KEY_LEFT, curses.KEY_RIGHT)
